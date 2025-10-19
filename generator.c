@@ -105,6 +105,8 @@ void print_grid_with_path(struct Grid *grid) {
     int width = grid->width;
     int height = grid->height;
 
+    printf("Résolution du SAINT LABYTINTHE\n");
+
     // ligne du haut
     for (int x = 0; x < width; x++) {
         printf("+---");
@@ -259,7 +261,7 @@ struct Cell *select_case(struct Cell *actual_cell, struct Grid *grid, struct Sta
     {
         stack_pop(stack);
         if (stack->size == 0) {
-            printf("Stack vide, plus de cases à explorer.\n");
+            // printf("Stack vide, plus de cases à explorer.\n");
             resolution(grid->cells, grid->width, grid->height);
             print_grid_with_path(grid);
             exit(EXIT_SUCCESS);

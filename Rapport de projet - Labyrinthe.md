@@ -1,5 +1,11 @@
 # Rapport de projet - Labyrinthe
 
+## Partie 0 - Liens importants
+
+- https://github.com/ParzivalPy/projet-labyrinthe
+
+- https://github.com/Anaisfreslon/Projet-Labyrinthe-V2
+
 ## Partie 1 - Générateur
 
 #### Choix de l'algorithme
@@ -10,7 +16,7 @@ Pour faire ce projet, suite à une proposition de l'énoncé, j'ai utilisé l'al
 
 #### Explication de la méthode et du code utilisés
 
-Afin de pouvoir utiliser une boucle for qui tourne pendant *width * height* , j'ai utilisé une fonction par **récurrence**. Mon but était que la fonction s'appelle tant qu'une case libre n'a pas été trouvée.
+Afin de pouvoir utiliser une boucle for qui tourne pendant _width _ height\* , j'ai utilisé une fonction par **récurrence**. Mon but était que la fonction s'appelle tant qu'une case libre n'a pas été trouvée.
 
 ```c
 actual_cell->visited = true;
@@ -22,7 +28,7 @@ for (int i = 0; i < 4; i++) {
 }
 ```
 
-Tout d'abord, j'**initialise** les variables et tableaux dont j'aurais besoin : 
+Tout d'abord, j'**initialise** les variables et tableaux dont j'aurais besoin :
 
 - Dire que la cellule à été visitée.
 
@@ -82,7 +88,7 @@ for (int i = 0; i < 4; i++)
     }
 ```
 
-Ensuite je **vérifie** quelles sont les cellules adjacentes libres : d'abord en vérifiant qu'elle est bien dans le tableau (c'est-à-dire vérifier que lorsqu'une case est au bord du tableau, je précise que le côté bordé n'est pas libre) et ensuite en vérifiant qu'elle n'est pas déjà visitée grâce à l'attribut *visited* de *struct Cell*.
+Ensuite je **vérifie** quelles sont les cellules adjacentes libres : d'abord en vérifiant qu'elle est bien dans le tableau (c'est-à-dire vérifier que lorsqu'une case est au bord du tableau, je précise que le côté bordé n'est pas libre) et ensuite en vérifiant qu'elle n'est pas déjà visitée grâce à l'attribut _visited_ de _struct Cell_.
 
 ```c
 if (free_cells == 0)
@@ -99,7 +105,7 @@ if (free_cells == 0)
 
 Ici, il s'agit de la partie qui m'as donnée le plus de problèmes. En effet, quand elle n'est pas là, tout va bien jusqu'à qu'une cellule n'est plus de cellules adjacentes, mais quand cette condition est là, c'est la **segmentation fault**.
 
-Elle permet de s'auto-rappeler lorsqu'aucune des cases adjacentes n'est displonible afin de s'exécuter sur la cellule précédente de la pile, elle fait pour cela appel à *stack_pop*, qui est une fonction permettant de supprimer la dernière valeur de la pile qui représente le chemin direct vers la cellule actuelle. 
+Elle permet de s'auto-rappeler lorsqu'aucune des cases adjacentes n'est displonible afin de s'exécuter sur la cellule précédente de la pile, elle fait pour cela appel à _stack_pop_, qui est une fonction permettant de supprimer la dernière valeur de la pile qui représente le chemin direct vers la cellule actuelle.
 
 #### Présentation des autres parties du code
 
@@ -134,3 +140,147 @@ void fill_cells(struct Grid *grid);
 ```
 
 Et voici les fonctions qui s'occupent de créer la grille et les cellules, d'afficher la grille et de la supprimer.
+
+## Partie 2 - Solveur
+
+Dans la partie de la résolution du labyrinthe, nous avons décidé d’utiliser l’algorithme Breadth First Search (BFS). Cet algorithme utilise la recherche en largeur, et nous permet d’explorer un graphe une grille pour trouver le chemin le plus court entre l’entrée et la sortie du labyrinthe.
+
+Voici l’idée principale de l’algo BFS: on part du point de départ et on explore par tour toutes les cases voisines de cette première case, puis on fait la même chose avec les cases suivantes. Quand l’algorithme trouve la case de sortie, ça y est, le chemin les plus court a été retrouvé.
+
+Pour réaliser la partie du solveur, j’ai utilisé une file: une structure qui nous permet d’ajouter les nouveaux éléments à la fin et de retirer l’élément au début lorsque la file est pleine.
+
+# Représenter le labyrinthe
+
+Je commence par définir les cellule de notre labyrinthe grâce à une structure “Cell”:
+
+```c
+struct Cell {
+    struct Cell *adjacent_cells[4];
+    int x, y;
+    int visite;
+    int chemin;
+    struct Cell *parent;
+};
+```
+
+Cette structure va donc nous permettre de repérer les coordonnées de la cellule dans la grille et permettra de vérifier si la cellule a déjà été visité. A la fin du code, la structure nous servira à reconstruire le chemin trouvé.
+
+# Gestion de la File
+
+Pour gérer l’algorithme BFS, nous avons crée une structure de file dynamique, qui pourra s’agrandir quand elle est pleine. Elle nous permet également de stocker les cellules à explorer dans le bon ordre.
+
+```c
+struct Queue {
+    struct Cell **array;
+    int front;
+    int size;
+    int capacity;
+};
+```
+
+Pour agrandir la file, nous utilisons cette fonction, que nous avons vu plusieurs fois :
+
+```c
+void agrandir_queue(struct Queue *queue) {
+    int new_capacity = queue->capacity * 2;
+    struct Cell** new_array = malloc(new_capacity * sizeof(struct Cell*));
+
+    for (int i = 0; i < queue->size; i++) {
+        new_array[i] = queue->array[(queue->front + i) % queue->capacity];
+    }
+
+    free(queue->array);
+    queue->array = new_array;
+    queue->capacity = new_capacity;
+    queue->front = 0;
+}
+```
+
+# La résolution BFS
+
+Voici la fonction principale qui permet d’effectuer le parcours BFS :
+
+```c
+void resolution(struct Cell** grid, int width, int height) {
+    struct Queue queue = queue_init();
+    struct Cell* start = &grid[0][0];
+    struct Cell* end = &grid[height - 1][width - 1];
+
+    start->visite = 1;
+    queue_push(&queue, start);
+
+    while (!queue_is_empty(&queue)) {
+        struct Cell* cur = queue_pop(&queue);
+
+        if (cur == end) break; // on a trouvé la sortie
+
+        // exploration des voisins
+        for (int d = 0; d < 4; d++) {
+            struct Cell* nb = cur->adjacent_cells[d];
+            if (nb && nb->visite == 0) {
+                nb->visite = 1;
+                nb->parent = cur;
+                queue_push(&queue, nb);
+            }
+        }
+    }
+
+    // reconstruction du chemin
+    struct Cell *cell = end;
+    while (cell != NULL) {
+        cell->chemin = 1;
+        cell = cell->parent;
+    }
+
+    queue_free(&queue);
+}
+```
+
+# Les éléments utilisés
+
+Le labyrinthe peut être considéré comme une grille de cellules et chaque cellule a des pointeurs vers les voisins qui sont tout autour (nord, sud, est et ouest dans notre code).
+
+- La file permet d’explorer les cellules à explorer dans le bon ordre. On ajoute à la fin les nouvelles cellules découvertes grâce à la fonction **push ,** et c’est grâce à la fonction **pop** qu’on vient d’explorer.
+- Les indicateurs de suivi :
+  **visite** : indique si la cellule a déjà été visitée
+  **parents** permet de se souvenir les cellule où on est déjà passé
+  **chemin** sert à marquer les cases appartenant à la solution
+
+Grâce à ces éléments, nous sommes sûrs de ne pas repasser par les mêmes cases ou de se perdre.
+
+# Etapes du BFS dans les détails
+
+### I- Initialisation
+
+On commence par tout remettre à zéro :
+
+- Toutes les cellules sont marquées comme **non visitées**.
+- La **file** est vide, puis on y met la cellule de départ.
+- On marque cette cellule comme **visitée**.
+
+### II- Boucle d’exploration
+
+Tant que la file n’est pas vide :
+
+1. On retire la première cellule de la file (celle à explorer).
+2. On regarde tous ses **voisins** (Nord, Sud, Est, Ouest).
+3. Pour chaque voisin accessible et non encore visité :
+   - On le marque comme visité.
+   - On enregistre son **parent** (pour reconstruire le chemin plus tard).
+   - On l’ajoute à la file pour qu’il soit exploré ensuite.
+4. Si on arrive sur la cellule de fin, on peut arrêter la recherche.
+
+### III- Reconstruction du chemin
+
+Quand la sortie est atteinte, on part de la cellule d’arrivée et on remonte en suivant les pointeurs parents jusqu’au départ.
+
+Chaque cellule traversée est marquée comme faisant partie du **chemin solution**.
+
+### IV- Affichage du résultat
+
+Une fois le chemin trouvé, le programme affiche le labyrinthe dans le terminal, en mettant :
+
+- `E` pour le départ
+- `S` pour la sortie
+- pour les cellules du chemin
+- `.` pour les autres cases
