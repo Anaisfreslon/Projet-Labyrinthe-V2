@@ -2,23 +2,9 @@
 #include <stdlib.h>
 #include <time.h>
 #include "solveur.h"
+#include "labyrinthe.h"
 
-// on a choisi ces 4 directions pour se repérer dans le labyrinthe 
-enum Direction{
-    NORTH,
-    SOUTH,
-    EAST,
-    WEST
-};
 
-// les paramètres du labyrinthe sont représentés par ça:
-struct Cell{
-    struct Cell *adjacent_cells[4]; // c'est les pointeurs vers les voisins accessibles
-    int x, y;                       // coordonnées de la cellule dans la grille
-    int visite;
-    int chemin;                     //permet de vérifier si la cellule a déjà été visité
-    struct Cell *parent;            // sert à reconstruire le chemin trouvé à la fin du code 
-};
 
 // Une file qui nous permet d'utiliser le Breadth first Search 
 struct Queue{

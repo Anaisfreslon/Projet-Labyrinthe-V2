@@ -2,6 +2,10 @@
 #include <stdlib.h>
 #include <time.h>
 #include <stdbool.h>
+#include "labyrinthe.h"
+#include "solveur.h"
+
+
 
 // -------------------------------------
 //             STACK
@@ -73,28 +77,6 @@ struct Cell *stack_pop(struct Stack* stack)
 //             GRID
 // -------------------------------------
 
-struct Cell 
-{
-    struct Cell *adjacent_cells[4];
-    bool visited;
-    int x;
-    int y;
-};
-
-enum Direction 
-{
-    NORTH,
-    SOUTH,
-    EAST,
-    WEST
-};
-
-struct Grid 
-{
-    struct Cell **cells;
-    int width;
-    int height;
-};
 
 struct Grid *create_grid(int width, int height) 
 {
@@ -206,6 +188,13 @@ void fill_cells(struct Grid *grid)
             cell->visited = false;
             cell->x = x;
             cell->y = y;
+            // initialisations utiles pour le solveur :
+            cell->visite = 0;
+            cell->chemin = 0;
+            cell->parent = NULL;
+            // voisins initialement NULL (pas de passage tant que générateur ne relie pas)
+            for (int d = 0; d < 4; d++)
+                cell->adjacent_cells[d] = NULL;
         }
     }
 }
@@ -329,7 +318,7 @@ struct Cell *select_case(struct Cell *actual_cell, struct Grid *grid, struct Sta
                         return &grid->cells[actual_cell->y][actual_cell->x + 1];
                     }
                 }
-                if (available_cells[i] = true)
+                if (available_cells[i] == true)
                 {
                     random_choice--;
                 }
@@ -363,7 +352,8 @@ int main(int argc, char *argv[]) {
         stack_push(&stack, actual_case);
         actual_case = select_case(actual_case, grid, &stack);
     }
-
+    print_grid(grid);
+    resolution(grid->cells, grid->width, grid->height);
     free_grid(grid);
 
     return 0;
