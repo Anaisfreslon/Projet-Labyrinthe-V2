@@ -101,72 +101,58 @@ struct Grid *create_grid(int width, int height)
     return grid;
 }
 
-void print_grid(struct Grid *grid) 
-{
+void print_grid_with_path(struct Grid *grid) {
+    int width = grid->width;
+    int height = grid->height;
+
     // ligne du haut
-    for (int x = 0; x < grid->width; x++) 
-    {
+    for (int x = 0; x < width; x++) {
         printf("+---");
     }
     printf("+\n");
 
+    for (int y = 0; y < height; y++) {
+        char line[4 * width + 1];
+        char interline[4 * width + 1];
+        line[0] = '|';
+        interline[0] = '+';
 
-    for (int y = 0; y < grid->height; y++) 
-    {
-        char line[4 * grid->width + 1];
-        char interline[4 * grid->width + 1];
-        for (int x = 0; x < grid->width; x++)
-        {
-            // lignes
-            line[0] = '|';
-            line[4 * grid->width] = '|';
-            line[4 * grid->width + 1] = '\0';
-            if (grid->cells[y][x].adjacent_cells[EAST] != NULL)
-            {
-                line[4 * x + 1] = ' ';
-                line[4 * x + 2] = ' ';
-                line[4 * x + 3] = ' ';
-                line[4 * x + 4] = ' ';
-            }
-            else
-            {
-                line[4 * x + 1] = ' ';
-                line[4 * x + 2] = ' ';
-                line[4 * x + 3] = ' ';
-                line[4 * x + 4] = '|';
-            }
+        for (int x = 0; x < width; x++) {
+            struct Cell *cell = &grid->cells[y][x];
 
-            //interlignes
-            interline[0] = '+';
-            interline[4 * grid->width] = '+';
-            interline[4 * grid->width + 1] = '\0';
-            if (y == grid->height - 1) {
+            // symbole à afficher
+            char symbol = ' ';
+            if (x == 0 && y == 0) symbol = 'S';                   // départ
+            else if (x == width - 1 && y == height - 1) symbol = 'E'; // arrivée
+            else if (cell->chemin) symbol = '*';                  // chemin BFS
+
+            // ligne horizontale
+            line[4 * x + 1] = ' ';
+            line[4 * x + 2] = symbol;
+            line[4 * x + 3] = ' ';
+            line[4 * x + 4] = (cell->adjacent_cells[EAST] != NULL) ? ' ' : '|';
+
+            // interligne
+            if (y == height - 1) {
                 interline[4 * x + 1] = '-';
                 interline[4 * x + 2] = '-';
                 interline[4 * x + 3] = '-';
                 interline[4 * x + 4] = '+';
-                continue;
-            }
-            else {
-                if (grid->cells[y][x].adjacent_cells[SOUTH] != NULL)
-                {
-                    interline[4 * x + 1] = ' ';
-                    interline[4 * x + 2] = ' ';
-                    interline[4 * x + 3] = ' ';
-                    interline[4 * x + 4] = '+';
-                }
-                else
-                {
-                    interline[4 * x + 1] = '-';
-                    interline[4 * x + 2] = '-';
-                    interline[4 * x + 3] = '-';
-                    interline[4 * x + 4] = '+';
-                }
+            } else {
+                interline[4 * x + 1] = (cell->adjacent_cells[SOUTH] != NULL) ? ' ' : '-';
+                interline[4 * x + 2] = (cell->adjacent_cells[SOUTH] != NULL) ? ' ' : '-';
+                interline[4 * x + 3] = (cell->adjacent_cells[SOUTH] != NULL) ? ' ' : '-';
+                interline[4 * x + 4] = '+';
             }
         }
+
+        line[4 * width] = '\0';
+        interline[4 * width] = '\0';
         printf("%s\n%s\n", line, interline);
     }
 }
+
+
 
 void free_grid(struct Grid *grid) 
 {
@@ -274,7 +260,7 @@ struct Cell *select_case(struct Cell *actual_cell, struct Grid *grid, struct Sta
         stack_pop(stack);
         if (stack->size == 0) {
             printf("Stack vide, plus de cases à explorer.\n");
-            print_grid(grid);
+            print_grid_with_path(grid);
             exit(EXIT_SUCCESS);
         }
         return select_case(stack->array[stack->size-1], grid, stack);
@@ -339,22 +325,25 @@ int main(int argc, char *argv[]) {
 
     int width = atoi(argv[1]);
     int height = atoi(argv[2]);
+
     struct Grid *grid = create_grid(width, height);
     fill_cells(grid);
 
     struct Stack stack = stack_init();
-
     struct Cell *actual_case = &grid->cells[0][0];
 
-    for (int i = 0; i < width * height; i++)
-    {
-        printf("\n\nTour %d\n", i);
+    // Génération du labyrinthe
+    for (int i = 0; i < width * height; i++) {
         stack_push(&stack, actual_case);
         actual_case = select_case(actual_case, grid, &stack);
     }
-    print_grid(grid);
-    resolution(grid->cells, grid->width, grid->height);
-    free_grid(grid);
 
+    // Résolution BFS
+    resolution(grid->cells, grid->width, grid->height);
+
+    // Affichage avec le chemin
+    print_grid_with_path(grid);
+
+    free_grid(grid);
     return 0;
 }
