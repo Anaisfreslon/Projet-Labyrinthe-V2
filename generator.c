@@ -18,16 +18,16 @@ struct Stack
     int capacity;
 };
 
-struct Stack stack_init() 
+struct Stack stack_init()
 {
     struct Cell** array = malloc(2 * sizeof(struct Cell*));
-    if (array == NULL) 
+    if (array == NULL)
     {
         fprintf(stderr, "Error allocating memory");
         exit(EXIT_FAILURE);
     }
 
-    return (struct Stack) 
+    return (struct Stack)
     {
         .array = array,
         .size = 0,
@@ -35,7 +35,7 @@ struct Stack stack_init()
     };
 }
 
-void stack_destroy(struct Stack* stack) 
+void stack_destroy(struct Stack* stack)
 {
     free(stack->array);
     stack->array = NULL;
@@ -43,12 +43,12 @@ void stack_destroy(struct Stack* stack)
     stack->capacity = 0;
 }
 
-void stack_push(struct Stack* stack, struct Cell* data) 
+void stack_push(struct Stack* stack, struct Cell* data)
 {
-    if (stack->size >= stack->capacity) 
+    if (stack->size >= stack->capacity)
     {
         struct Cell** new_array = realloc(stack->array, 2 * stack->capacity * sizeof(struct Cell*));
-        if (new_array == NULL) 
+        if (new_array == NULL)
         {
             fprintf(stderr, "Error allocating memory");
             free(stack->array);
@@ -61,9 +61,9 @@ void stack_push(struct Stack* stack, struct Cell* data)
     stack->array[stack->size++] = data;
 }
 
-struct Cell *stack_pop(struct Stack* stack) 
+struct Cell *stack_pop(struct Stack* stack)
 {
-    if (stack->size == 0) 
+    if (stack->size == 0)
     {
         fprintf(stderr, "No items in stack");
         exit(EXIT_FAILURE);
@@ -78,21 +78,21 @@ struct Cell *stack_pop(struct Stack* stack)
 // -------------------------------------
 
 
-struct Grid *create_grid(int width, int height) 
+struct Grid *create_grid(int width, int height)
 {
     struct Grid *grid = malloc(sizeof(struct Grid));
     grid->width = width;
     grid->height = height;
     grid->cells = malloc(height * sizeof(struct Cell *));
-    if (grid->cells == NULL) 
+    if (grid->cells == NULL)
     {
         printf("Err: Row Attribution malloc failed");
         exit(EXIT_FAILURE);
     }
-    for (int i = 0; i < height; i++) 
+    for (int i = 0; i < height; i++)
     {
         grid->cells[i] = malloc(width * sizeof(struct Cell));
-        if (grid->cells[i] == NULL) 
+        if (grid->cells[i] == NULL)
         {
             printf("Err: Cases (columns) Attribution malloc failed");
             exit(EXIT_FAILURE);
@@ -122,8 +122,8 @@ void print_grid_with_path(struct Grid *grid) {
 
             // symbole à afficher
             char symbol = ' ';
-            if (x == 0 && y == 0) symbol = 'S';                   // départ
-            else if (x == width - 1 && y == height - 1) symbol = 'E'; // arrivée
+            if (x == 0 && y == 0) symbol = 'E';                   // départ
+            else if (x == width - 1 && y == height - 1) symbol = 'S'; // arrivée
             else if (cell->chemin) symbol = '*';                  // chemin BFS
 
             // ligne horizontale
@@ -154,9 +154,9 @@ void print_grid_with_path(struct Grid *grid) {
 
 
 
-void free_grid(struct Grid *grid) 
+void free_grid(struct Grid *grid)
 {
-    for (int i = 0; i < grid->height; i++) 
+    for (int i = 0; i < grid->height; i++)
     {
         free(grid->cells[i]);
     }
@@ -164,11 +164,11 @@ void free_grid(struct Grid *grid)
     free(grid);
 }
 
-void fill_cells(struct Grid *grid) 
+void fill_cells(struct Grid *grid)
 {
-    for (int y = 0; y < grid->height; y++) 
+    for (int y = 0; y < grid->height; y++)
     {
-        for (int x = 0; x < grid->width; x++) 
+        for (int x = 0; x < grid->width; x++)
         {
             struct Cell *cell = &grid->cells[y][x];
             cell->visited = false;
@@ -189,7 +189,7 @@ void fill_cells(struct Grid *grid)
 //             LOGIC
 // -------------------------------------
 
-struct Cell *select_case(struct Cell *actual_cell, struct Grid *grid, struct Stack *stack) 
+struct Cell *select_case(struct Cell *actual_cell, struct Grid *grid, struct Stack *stack)
 {
     actual_cell->visited = true;
     int free_cells = 4;
@@ -250,8 +250,8 @@ struct Cell *select_case(struct Cell *actual_cell, struct Grid *grid, struct Sta
             }
         }
     }
-    printf("Coordonées : (%d, %d)\n", actual_cell->y, actual_cell->x);
-    printf("Free_cells : %d\n", free_cells);
+    // printf("Coordonées : (%d, %d)\n", actual_cell->y, actual_cell->x);
+    // printf("Free_cells : %d\n", free_cells);
     // printf("CHECKPOINT DE TES MORTS n1\n\n");
     // pas de segmentation fault
 
@@ -260,6 +260,7 @@ struct Cell *select_case(struct Cell *actual_cell, struct Grid *grid, struct Sta
         stack_pop(stack);
         if (stack->size == 0) {
             printf("Stack vide, plus de cases à explorer.\n");
+            resolution(grid->cells, grid->width, grid->height);
             print_grid_with_path(grid);
             exit(EXIT_SUCCESS);
         }
@@ -342,7 +343,7 @@ int main(int argc, char *argv[]) {
     resolution(grid->cells, grid->width, grid->height);
 
     // Affichage avec le chemin
-    print_grid_with_path(grid);
+    // print_grid_with_path(grid);
 
     free_grid(grid);
     return 0;

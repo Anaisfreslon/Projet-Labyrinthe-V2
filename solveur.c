@@ -6,7 +6,7 @@
 
 
 
-// Une file qui nous permet d'utiliser le Breadth first Search 
+// Une file qui nous permet d'utiliser le Breadth first Search
 struct Queue{
     struct Cell **array; // tableau de pointeurs vers des cellules
     int front;           // index du premier élément
@@ -37,7 +37,7 @@ void agrandir_queue(struct Queue *queue) {
     free(queue->array);   // on libère l'ancien tableau
     queue->array = new_array;
     queue->capacity = new_capacity;
-    queue->front = 0;     
+    queue->front = 0;    
 }
 
 // Ajouter un élément à la fin de la file
@@ -50,7 +50,7 @@ void queue_push(struct Queue *queue, struct Cell *cell) {
     queue->size++;
 }
 
-// cette fonction sert à enlever les l'élément en début de file 
+// cette fonction sert à enlever les l'élément en début de file
 struct Cell* queue_pop(struct Queue *queue) {
     if (queue->size == 0) {
         return NULL; // file vide
@@ -73,6 +73,7 @@ void queue_free(struct Queue *queue) {
 
 // === Algorithme de résolution BFS ===
 void resolution(struct Cell** grid, int width, int height) {
+    // printf("Checkpoint -1");
     struct Queue queue = queue_init();
 
     struct Cell* start = &grid[0][0];                // départ en haut à gauche
@@ -91,6 +92,8 @@ void resolution(struct Cell** grid, int width, int height) {
     start->visite = 1;
     queue_push(&queue, start);
 
+    // printf("Checkpoint 0");
+
     // Parcours BFS
     while (!queue_is_empty(&queue)) {
         struct Cell* cur = queue_pop(&queue);
@@ -108,27 +111,13 @@ void resolution(struct Cell** grid, int width, int height) {
         }
     }
 
+
     struct Cell *cell = end;
     while(cell != NULL){
         cell->chemin = 1;
-        cell = cell -> parent; 
-    } 
-
-printf ("\n VOICI LA RESOLUTION DU SAINT LABYRINTHE \n");
-for (int i = 0; i < height; i++) {
-        for (int j = 0; j < width; j++) {
-            if (&grid[i][j] == start)
-                printf(" S "); // départ
-            else if (&grid[i][j] == end)
-                printf(" E "); // sortie
-            else if (grid[i][j].chemin == 1)
-                printf(" * "); // chemin BFS
-            else
-                printf(" . "); // case vide
-        }
-        printf("\n");
+        cell = cell -> parent;
     }
+
 
     queue_free(&queue);
 }
-
