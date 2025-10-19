@@ -146,8 +146,8 @@ void print_grid_with_path(struct Grid *grid) {
             }
         }
 
-        line[4 * width] = '\0';
-        interline[4 * width] = '\0';
+        line[4 * width +1 ]  = '\0';
+        interline[4 * width +  1] = '\0';
         printf("%s\n%s\n", line, interline);
     }
 }
